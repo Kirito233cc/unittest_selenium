@@ -43,7 +43,11 @@ class df_po:
         conn = self.engine.connect()
         DBSession = sessionmaker(bind=conn)
         session = DBSession()
-        element = Element(element_name=element_name, element_type=element_type, element_address=element_address, created_at=now, updated_at=now)
+        element = Element(element_name=element_name,
+                          element_type=element_type,
+                          element_address=element_address,
+                          created_at=now,
+                          updated_at=now)
         session.add(element)
         session.commit()
         session.close()
