@@ -2,7 +2,6 @@
 import unittest
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from page_module.df_login import Df
 
 
 class TestDfTest1(unittest.TestCase):
@@ -22,8 +21,7 @@ class TestDfTest1(unittest.TestCase):
         self.driver.get("http://df.zhiyitech.cn/login")
         self.driver.set_window_size(1440, 875)
         # 调用登陆模块
-        df = Df(self.driver)
-        df.login('18958048696', '123123')
+
         # 点击左侧列表菜单
         self.driver.find_element(By.XPATH, "//span[contains(.,\'抖音选款\')]").click()
         self.driver.find_element(By.XPATH, "//span[contains(.,\'小红书推荐\')]").click()

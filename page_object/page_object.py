@@ -9,11 +9,11 @@ from sqlalchemy import create_engine
 import configparser
 
 
-class df_po:
+class page_object:
     def __init__(self):
         """从config.ini提取数据库信息并初始化数据库连接"""
         config = configparser.ConfigParser()
-        config.read('../config/config.ini')
+        config.read('./config/config.ini')
         user = config['database']['user']
         passwd = config['database']['passwd']
         host = config['database']['host']
@@ -21,7 +21,7 @@ class df_po:
         databaseName = config['database']['databaseName']
         self.engine = create_engine('mysql+pymysql://%s:%s@%s:%s/%s' % (user, passwd, host, port, databaseName))
 
-    def getData(self, element_name='login_input'):
+    def get_element_address(self, element_name):
         """从数据库中获取对应名字的元素信息"""
         conn = self.engine.connect()
         # 创建DBSession类型
@@ -35,7 +35,7 @@ class df_po:
         conn.close()
         return element.element_address
 
-    def addData(self, element_name, element_type, element_address):
+    def add_element(self, element_name, element_type, element_address):
         """添加元素信息到数据库"""
         # 获取当前时间
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -55,7 +55,7 @@ class df_po:
 
 
 if __name__ == '__main__':
-    testPo = df_po()
-    testPo.addData('login_code', 1, 'codeInput')
-    ts = testPo.getData()
+    testPo = page_object()
+    # testPo.add_element('login_code', 1, 'codeInput')
+    ts = testPo.get_element_address('login_confirm')
     print(ts)
