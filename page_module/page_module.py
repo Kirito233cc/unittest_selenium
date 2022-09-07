@@ -3,8 +3,16 @@
 同时sqlalchemy支持数据库连接池，可以减少每次调用连接关闭数据库所产生的开销
 """
 import configparser
+
+from selenium import webdriver
+
+from selenium.webdriver.common.by import By
+
 from datetime import datetime
+
 from time import sleep
+
+from flask import Blueprint, request
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -14,6 +22,9 @@ from data_object.table_element_locate import Element_locate
 from data_object.table_element_operate import Element_operate
 from data_object.table_page_module import Page_module
 from data_object.table_page_module_detail import Page_module_detail
+
+# 进行蓝图注册
+page_module = Blueprint('page_module', __name__)
 
 
 class execute_module:
@@ -69,7 +80,7 @@ class execute_module:
                  replace('None', ''))
 
 
-class page_module:
+class page_module_edit:
     def __init__(self):
         self.now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         """从config.ini提取数据库信息并初始化数据库连接"""
@@ -90,7 +101,7 @@ class page_module:
         session = DBSession()
         new_page_module = Page_module(module_name=module_name, created_at=self.now, updated_at=self.now)
         session.add(new_page_module)
-        session.flush() # 此时能通过new_page_module获取到刚新增数据的id了
+        session.flush()  # 此时能通过new_page_module获取到刚新增数据的id了
         self.new_module_id = new_page_module.id
         session.commit()
         session.close()
@@ -110,11 +121,38 @@ class page_module:
         conn.close()
 
 
+# 执行指定的模块
+@page_module.route('/execute_module/', methods=['POST'])
+def execute_module_func():
+    driver = webdriver.Chrome()
+    driver.get('http://df.zhiyitech.cn/login')
+    module = execute_module(driver)
+    module.execute_selenium(request.json['module_name'])
+    driver.quit()
+    return 'success'
+
+
+# 向数据库添加模块内容和详情
+@page_module.route('/add_module/', methods=['POST'])
+def add_module():
+    # module_name, element_id, operate_type, send_msg, operate_step
+    module = page_module_edit()
+    module_name = request.json['module_name']
+    module.add_module(module_name)  # 先添加page_module表数据
+    for index in request.json['module_ele']:
+        ele_id = index['element_id']
+        op_type = index['operate_type']
+        send_msg = index['send_msg']
+        operate_step = index['operate_step']
+        module.add_module_detail(ele_id, op_type, send_msg, operate_step)  # 再循环遍历添加所有的detail数据
+    return 'SUCCESS'
+
+
 if __name__ == '__main__':
     # drivers = webdriver.Chrome()
     # drivers.implicitly_wait(30)
     # drivers.get('http://df.zhiyitech.cn')
     # test = execute_module(drivers)
     # test.execute_selenium()
-    test = page_module()
+    test = page_module_edit()
     test.add_module('left_menu', 4, 0, '', 1)

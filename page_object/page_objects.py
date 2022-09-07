@@ -6,10 +6,14 @@ from datetime import datetime
 from sqlalchemy.orm import sessionmaker
 from data_object.table_element import Element
 from sqlalchemy import create_engine
+from flask import Blueprint, request
 import configparser
 
 
-class page_object:
+page_object = Blueprint('page_object', __name__)
+
+
+class page_objects:
     def __init__(self):
         """从config.ini提取数据库信息并初始化数据库连接"""
         config = configparser.ConfigParser()
@@ -54,8 +58,21 @@ class page_object:
         conn.close()
 
 
+# 向数据库添加页面元素
+@page_object.route('/add_element/', methods=['POST'])
+def add_elements():
+    page = page_objects()
+    # element_name, element_type, element_address
+    for index in request.json['elements']:
+        ele_name = index['element_name']
+        ele_type = index['element_type']
+        ele_addr = index['element_address']
+        page.add_element(ele_name, ele_type, ele_addr)
+    return 'SUCCESS'
+
+
 if __name__ == '__main__':
-    testPo = page_object()
+    testPo = page_objects()
     # testPo.add_element('login_code', 1, 'codeInput')
     ts = testPo.get_element_address('login_confirm')
     print(ts)
