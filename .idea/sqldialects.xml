@@ -2,5 +2,11 @@
 <project version="4">
   <component name="SqlDialectMappings">
     <file url="file://$PROJECT_DIR$/page_object/page_objects.py" dialect="MySQL" />
+    <file url="file://$PROJECT_DIR$/sql/create_element.sql" dialect="MySQL" />
+    <file url="file://$PROJECT_DIR$/sql/create_element_locate.sql" dialect="MySQL" />
+    <file url="file://$PROJECT_DIR$/sql/create_element_operate.sql" dialect="MySQL" />
+    <file url="file://$PROJECT_DIR$/sql/create_page_module.sql" dialect="MySQL" />
+    <file url="file://$PROJECT_DIR$/sql/create_page_module_detail.sql" dialect="MySQL" />
+    <file url="file://$PROJECT_DIR$/sql/create_user.sql" dialect="MySQL" />
   </component>
 </project>
