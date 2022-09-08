@@ -149,10 +149,10 @@ def add_module():
 
 
 if __name__ == '__main__':
-    # drivers = webdriver.Chrome()
-    # drivers.implicitly_wait(30)
-    # drivers.get('http://df.zhiyitech.cn')
-    # test = execute_module(drivers)
-    # test.execute_selenium()
+    drivers = webdriver.Chrome()
+    drivers.implicitly_wait(30)
+    drivers.get('http://df.zhiyitech.cn')
+    test = execute_module(drivers)
+    test.execute_selenium()
     test = page_module_edit()
     test.add_module('left_menu', 4, 0, '', 1)
