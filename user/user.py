@@ -9,35 +9,26 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import NoResultFound
 from data_object.table_user import User
+from functools import wraps
+from static_method.static import link
+
 
 user_api = Blueprint('user_api', __name__)
 
 
 class user:
     def __init__(self):
-        """
-        从/config/config.ini中获取redis、数据库连接信息
-        """
-        config = configparser.ConfigParser()
-        config.read('./config/config.ini')
-        self.r_host = config['redis']['host']
-        self.r_port = config['redis']['port']
-        self.r_db = config['redis']['db']
-        self.m_host = config['database']['host']
-        self.m_port = config['database']['port']
-        self.m_user = config['database']['user']
-        self.m_pwd = config['database']['passwd']
-        self.m_db_name = config['database']['databaseName']
-        self.now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        """"""
 
-    def check_login(self, user_name, user_pwd):
+    @staticmethod
+    def check_login(user_name, user_pwd):
         """
         先在redis中校验用户名和密码，若通过则赋予token；若redis中没有则连接数据库查询，若有则添加数据到redis
         :param user_name: 用户名
         :param user_pwd: 密码
         :return: 返回json串提示登录校验结果及token
         """
-        r = redis.StrictRedis(self.r_host, self.r_port, self.r_db)  # 建立redis连接
+        r = link.link_redis()  # 通过静态方法建立redis连接
         if r.get(user_name):
             r_content = json.loads(r.get(user_name).decode('utf-8'))
             if r_content['pwd'] == user_pwd:
@@ -48,9 +39,7 @@ class user:
             else:
                 return dict(success=False, message='用户名或密码错误')
         else:
-            engine = create_engine(
-                'mysql+pymysql://%s:%s@%s:%s/%s' % (self.m_user, self.m_pwd, self.m_host, self.m_port, self.m_db_name))
-            conn = engine.connect()
+            conn = link.link_mysql()  # 通过静态方法建立mysql连接
             DBSession = sessionmaker(bind=conn)
             session = DBSession()
             try:
@@ -67,24 +56,24 @@ class user:
             coon.dispose()
         r.shutdown()  # 关闭连接
 
-    def sign_up(self, user_name, user_pwd):
+    @staticmethod
+    def sign_up(user_name, user_pwd):
         """
         注册
         :param user_name:新用户的用户名
         :param user_pwd: 新用户的密码
         :return: 返回json串提示登录校验结果及token
         """
-        r = redis.StrictRedis(self.r_host, self.r_port, self.r_db)  # 建立redis连接
-        engine = create_engine(
-            'mysql+pymysql://%s:%s@%s:%s/%s' % (self.m_user, self.m_pwd, self.m_host, self.m_port, self.m_db_name))  # 建立数据库连接
-        conn = engine.connect()
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        r = link.link_redis()
+        conn = link.link_mysql()
         DBSession = sessionmaker(bind=conn)
         session = DBSession()
         try:
             session.query(User).filter(User.user_name == user_name).one()
             return dict(success=False, message='该用户已注册')
         except NoResultFound:
-            new_user = User(user_name=user_name, user_pwd=user_pwd, created_at=self.now, updated_at=self.now)
+            new_user = User(user_name=user_name, user_pwd=user_pwd, created_at=now, updated_at=now)
             session.add(new_user)
             session.commit()
             token = uuid.uuid4().hex
@@ -96,20 +85,33 @@ class user:
         conn.dispose()
 
 
+# def tokenCheck(func):
+#     @wraps(func)
+#     def wrapTokenCheck():
+#         config = configparser.ConfigParser()
+#         config.read('./config/config.ini')
+#         r_host = config['redis']['host']
+#         r_port = config['redis']['port']
+#         r_db = config['redis']['db']
+#         header_token = request.headers.get('token')
+#         r = redis.StrictRedis(r_host, r_port, r_db)
+#         r_content = json.loads(r.get().decode('utf-8'))
+#         func()
+#     return wrapTokenCheck
+
+
 @user_api.route('/login/', methods=['POST'])
 def user_login():
     user_name = request.json['user_name']
     user_pwd = request.json['user_pwd']
-    current_user = user()
-    return current_user.check_login(user_name, user_pwd)
+    return user.check_login(user_name, user_pwd)
 
 
 @user_api.route('/sign_up/', methods=['POST'])
 def user_sign_up():
     user_name = request.json['user_name']
     user_pwd = request.json['user_pwd']
-    new_user = user()
-    msg = new_user.sign_up(user_name, user_pwd)
+    msg = user.sign_up(user_name, user_pwd)
     return msg
 
 

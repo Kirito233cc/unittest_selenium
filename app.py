@@ -1,9 +1,12 @@
 from page_module.page_module import page_module
 from page_object.page_objects import page_object
 from user.user import user_api
-from flask import Flask, jsonify
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URL'] = 'mysql+pymysql://root:Xx7732088@localhost:3306/df_page_object'
+db = SQLAlchemy(app)
 
 # 蓝图注册各功能模块
 app.register_blueprint(page_module, url_prefix='/page_module')
@@ -18,4 +21,5 @@ app.register_blueprint(user_api, url_prefix='/user_api')
 
 
 if __name__ == '__main__':
+    link.link_mysql()
     app.run(host='0.0.0.0', port=8000, debug=True)
