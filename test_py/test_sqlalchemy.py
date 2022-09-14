@@ -7,7 +7,7 @@ from flask import Blueprint, request
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from data_object.table_user import User
-from static_method.static import link
+from settings.settings import link
 
 
 session = link.link_mysql()

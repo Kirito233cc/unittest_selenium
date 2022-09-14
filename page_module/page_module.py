@@ -23,6 +23,9 @@ from data_object.table_element_operate import Element_operate
 from data_object.table_page_module import Page_module
 from data_object.table_page_module_detail import Page_module_detail
 
+from settings import Config
+from user.user import token_check
+
 # 进行蓝图注册
 page_module = Blueprint('page_module', __name__)
 
@@ -31,19 +34,11 @@ class execute_module:
     def __init__(self, driver):
         self.driver = driver
         self.driver.implicitly_wait(30)
-        """从config.ini提取数据库信息并初始化数据库连接"""
-        config = configparser.ConfigParser()
-        config.read('./config/config.ini')
-        user = config['database']['user']
-        passwd = config['database']['passwd']
-        host = config['database']['host']
-        port = config['database']['port']
-        databaseName = config['database']['databaseName']
-        self.engine = create_engine('mysql+pymysql://%s:%s@%s:%s/%s' % (user, passwd, host, port, databaseName))
 
+    @staticmethod
     def execute_selenium(self, module_name='login'):
         """根据模块名字执行对应的selenium"""
-        conn = self.engine.connect()
+        conn = Config.engine.connect()
         # 创建DBSession类型
         DBSession = sessionmaker(bind=conn)
         # 创建session对象
@@ -82,21 +77,13 @@ class execute_module:
 
 class page_module_edit:
     def __init__(self):
+        self.new_module_id = None
         self.now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        """从config.ini提取数据库信息并初始化数据库连接"""
-        config = configparser.ConfigParser()
-        config.read('./config/config.ini')
-        user = config['database']['user']
-        passwd = config['database']['passwd']
-        host = config['database']['host']
-        port = config['database']['port']
-        databaseName = config['database']['databaseName']
-        self.engine = create_engine('mysql+pymysql://%s:%s@%s:%s/%s' % (user, passwd, host, port, databaseName))
 
     # 添加模块方法，需要接收模块名、元素id、操作类型、携带信息、操作步骤
     # 同时修改page_module表和page_module_detail表
     def add_module(self, module_name):
-        conn = self.engine.connect()
+        conn = Config.engine.connect()
         DBSession = sessionmaker(bind=conn)
         session = DBSession()
         new_page_module = Page_module(module_name=module_name, created_at=self.now, updated_at=self.now)
@@ -108,7 +95,7 @@ class page_module_edit:
         conn.close()
 
     def add_module_detail(self, element_id, operate_type, send_msg, operate_step):
-        conn = self.engine.connect()
+        conn = Config.engine.connect()
         DBSession = sessionmaker(bind=conn)
         session = DBSession()
         new_page_module_detail = Page_module_detail(page_module_id=self.new_module_id, element_id=element_id,
@@ -123,36 +110,45 @@ class page_module_edit:
 
 # 执行指定的模块
 @page_module.route('/execute_module/', methods=['POST'])
+@token_check
 def execute_module_func():
-    driver = webdriver.Chrome()
-    driver.get('http://df.zhiyitech.cn/login')
-    module = execute_module(driver)
-    module.execute_selenium(request.json['module_name'])
-    driver.quit()
-    return 'success'
+    try:
+        driver = webdriver.Chrome()
+        driver.get('http://df.zhiyitech.cn/login')
+        module = execute_module(driver)
+        module.execute_selenium(request.json['module_name'])
+        driver.quit()
+        return dict(success=True, message='执行成功')
+    except:
+        return dict(success=False, message='运行失败')
 
 
 # 向数据库添加模块内容和详情
 @page_module.route('/add_module/', methods=['POST'])
+@token_check
 def add_module():
-    # module_name, element_id, operate_type, send_msg, operate_step
-    module = page_module_edit()
-    module_name = request.json['module_name']
-    module.add_module(module_name)  # 先添加page_module表数据
-    for index in request.json['module_ele']:
-        ele_id = index['element_id']
-        op_type = index['operate_type']
-        send_msg = index['send_msg']
-        operate_step = index['operate_step']
-        module.add_module_detail(ele_id, op_type, send_msg, operate_step)  # 再循环遍历添加所有的detail数据
-    return 'SUCCESS'
+    try:
+        # module_name, element_id, operate_type, send_msg, operate_step
+        module = page_module_edit()
+        module_name = request.json['module_name']
+        module.add_module(module_name)  # 先添加page_module表数据
+        for index in request.json['module_ele']:
+            ele_id = index['element_id']
+            op_type = index['operate_type']
+            send_msg = index['send_msg']
+            operate_step = index['operate_step']
+            module.add_module_detail(ele_id, op_type, send_msg, operate_step)  # 再循环遍历添加所有的detail数据
+        return dict(success=True, message='添加模块成功')
+    except:
+        return dict(success=False, message='添加失败')
 
 
 if __name__ == '__main__':
-    drivers = webdriver.Chrome()
-    drivers.implicitly_wait(30)
-    drivers.get('http://df.zhiyitech.cn')
-    test = execute_module(drivers)
-    test.execute_selenium()
-    test = page_module_edit()
-    test.add_module('left_menu', 4, 0, '', 1)
+    pass
+    # drivers = webdriver.Chrome()
+    # drivers.implicitly_wait(30)
+    # drivers.get('http://df.zhiyitech.cn')
+    # test = execute_module(drivers)
+    # test.execute_selenium()
+    # test = page_module_edit()
+    # test.add_module('left_menu', 4, 0, '', 1)

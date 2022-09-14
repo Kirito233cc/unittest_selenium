@@ -8,26 +8,20 @@ from data_object.table_element import Element
 from sqlalchemy import create_engine
 from flask import Blueprint, request
 import configparser
-
+from settings import Config
+from user.user import token_check
 
 page_object = Blueprint('page_object', __name__)
 
 
 class page_objects:
     def __init__(self):
-        """从config.ini提取数据库信息并初始化数据库连接"""
-        config = configparser.ConfigParser()
-        config.read('./config/config.ini')
-        user = config['database']['user']
-        passwd = config['database']['passwd']
-        host = config['database']['host']
-        port = config['database']['port']
-        databaseName = config['database']['databaseName']
-        self.engine = create_engine('mysql+pymysql://%s:%s@%s:%s/%s' % (user, passwd, host, port, databaseName))
+        """"""
 
-    def get_element_address(self, element_name):
+    @staticmethod
+    def get_element_address(element_name):
         """从数据库中获取对应名字的元素信息"""
-        conn = self.engine.connect()
+        conn = Config.engine.connect()
         # 创建DBSession类型
         DBSession = sessionmaker(bind=conn)
         # 创建session对象
@@ -39,12 +33,13 @@ class page_objects:
         conn.close()
         return element.element_address
 
-    def add_element(self, element_name, element_type, element_address):
+    @staticmethod
+    def add_element(element_name, element_type, element_address):
         """添加元素信息到数据库"""
         # 获取当前时间
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         # 建立连接
-        conn = self.engine.connect()
+        conn = Config.engine.connect()
         DBSession = sessionmaker(bind=conn)
         session = DBSession()
         element = Element(element_name=element_name,
@@ -60,6 +55,7 @@ class page_objects:
 
 # 向数据库添加页面元素
 @page_object.route('/add_element/', methods=['POST'])
+@token_check
 def add_elements():
     page = page_objects()
     # element_name, element_type, element_address
@@ -68,7 +64,7 @@ def add_elements():
         ele_type = index['element_type']
         ele_addr = index['element_address']
         page.add_element(ele_name, ele_type, ele_addr)
-    return 'SUCCESS'
+    return dict(success=True, message='添加成功')
 
 
 if __name__ == '__main__':
