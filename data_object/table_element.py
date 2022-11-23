@@ -14,6 +14,7 @@ class Element(Base):
     element_name = Column(String(100))
     element_type = Column(SmallInteger)
     element_address = Column(String(250))
+    remark = Column(String(255))
     created_at = Column(DATETIME)
     updated_at = Column(DATETIME)
     deleted_at = Column(DATETIME)

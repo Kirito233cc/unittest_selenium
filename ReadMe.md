@@ -3,6 +3,9 @@
 2. **data_object**——存放数据库表对应的ORM类
 3. **page_module**——存放用于处理页面模块的方法
 4. **page_object**——存放用户处理页面元素的方法
-5. **app.py**——flask主文件，接口的实现
-
+5. **user**——登陆、注册、token验证相关的内容
+6. **app.py**——flask主文件，接口的实现 
+7. **settings.py**——redis、数据库连接相关
+8. **sql**——存放数据库DDL
+9. **test_py**——开发过程中的测试文件
 # 二、实现方法

@@ -1,13 +1,5 @@
-import configparser
-import json
-import uuid
-
-import redis
-from flask import Blueprint, request
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 from data_object.table_user import User
-from settings.settings import link
+from config.settings import link
 
 
 session = link.link_mysql()

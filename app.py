@@ -1,11 +1,10 @@
 from page_module.page_module import page_module
 from page_object.page_objects import page_object
 from user.user import user_api
-from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
+from celery_thing.celeryapp import app
 
-app = Flask(__name__)
-app.config.from_object('settings.Config')
+
+# app.config.from_object('./config/settings.Config')
 
 # 蓝图注册各功能模块
 app.register_blueprint(page_module, url_prefix='/page_module')

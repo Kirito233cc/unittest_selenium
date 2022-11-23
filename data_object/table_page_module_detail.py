@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, SmallInteger, DATETIME
+from sqlalchemy import Column, String, SmallInteger, DATETIME, Float
 from sqlalchemy.ext.declarative import declarative_base
 
 # 创建对象基类
@@ -14,6 +14,7 @@ class Page_module_detail(Base):
     page_module_id = Column(SmallInteger)
     element_id = Column(SmallInteger)
     operate_type = Column(SmallInteger)
+    pause_time = Column(Float)
     send_msg = Column(String(255))
     operate_step = Column(SmallInteger)
     created_at = Column(DATETIME)
