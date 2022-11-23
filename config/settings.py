@@ -1,5 +1,4 @@
 import redis
-import configparser
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -11,13 +10,11 @@ from data_object.table_element import Element
 
 
 class Config:
-    config = configparser.ConfigParser()
-    config.read('./config/config.ini')
-    m_host = config['database']['host']
-    m_port = config['database']['port']
-    m_user = config['database']['user']
-    m_pwd = config['database']['passwd']
-    m_db_name = config['database']['databaseName']
+    m_host = "localhost"
+    m_port = "3306"
+    m_user = "root"
+    m_pwd = "Xx7732088"
+    m_db_name = "df_page_object"
     engine = create_engine(
         'mysql+pymysql://%s:%s@%s:%s/%s' % (m_user, m_pwd, m_host, m_port, m_db_name))
 
@@ -25,11 +22,9 @@ class Config:
 class link_redis:
     @staticmethod
     def link_redis():
-        config = configparser.ConfigParser()
-        config.read('./config/config.ini')
-        r_host = config['redis']['host']
-        r_port = config['redis']['port']
-        r_db = config['redis']['db']
+        r_host = 'localhost'
+        r_port = '6379'
+        r_db = '0'
         return redis.StrictRedis(r_host, int(r_port), int(r_db))
 
 

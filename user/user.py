@@ -1,17 +1,14 @@
-import configparser
 import json
 import uuid
 from datetime import datetime
 
-import redis
 from flask import Blueprint, request
-from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import NoResultFound
 from data_object.table_user import User
 from functools import wraps
 
-from settings import Config, link_redis
+from config.settings import Config, link_redis
 
 
 user_api = Blueprint('user_api', __name__)
@@ -38,7 +35,9 @@ class user:
                 r.delete(origin_token)  # 删除原有的token
                 r_content['token'] = token  # 校验密码成功赋予token
                 r.set(user_name, json.dumps(r_content))  # 设置username：token/pwd键值对
+                r.expire(user_name, 604800)  # 设置过期时间一周
                 r.set(token, json.dumps(dict(user_name=user_name)))  # 设置token：username键值对
+                r.expire(token, 604800)  # 设置过期时间一周
                 return dict(success=True, message='登陆成功', token=token)
             else:
                 return dict(success=False, message='用户名或密码错误')
@@ -52,7 +51,9 @@ class user:
                     token = uuid.uuid4().hex
                     r_content = dict(pwd=user_pwd, token=token)
                     r.set(user_name, json.dumps(r_content))
+                    r.expire(user_name, 604800)
                     r.set(token, json.dumps(dict(user_name=user_name)))
+                    r.expire(token, 604800)
                     return dict(success=True, message='登陆成功', token=token)
                 else:
                     return dict(success=False, message='用户名或密码错误')
@@ -110,7 +111,8 @@ def token_check(func):
             r = link_redis.link_redis()
             json.loads(r.get(header_token).decode('utf-8'))
             return func()
-        except:
+        except AttributeError as e:
+            print(e)
             return dict(success=False, message='验证失败，请重新登陆')
     return wrap_token_check
 
